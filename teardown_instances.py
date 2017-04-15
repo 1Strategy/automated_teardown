@@ -13,8 +13,13 @@ def lambda_handler(event, context):
     dry_run = event['dry_run']
 
     # Initialize/reinitialize global ec2_client
-    # global ec2_client
-    # ec2_client = boto3.client('ec2', region_name=event['region'])
+    global ec2_client
+    ec2_client = boto3.client('ec2', region_name=event['region'])
+
+    if 'protected_resources' in event:
+        protected_resources = event['protected_resources']
+    else:
+        protected_resources = []
 
     # Retreives a list of all of the ec2 instances in the given 'region'
     instances = ec2_client.describe_instances()['Reservations']
@@ -25,7 +30,7 @@ def lambda_handler(event, context):
     # For each instance in the list of instances,
     for instance in instances:
         # determinate if they should be terminated or not.
-        if should_terminate(instance):
+        if should_terminate(instance, protected_resources):
             # add items to be terminated to the instances_to_terminate array
             # for later handling
             instances_to_terminate.append(
@@ -62,6 +67,7 @@ def terminate_instances(instances):
             )
 
         try:
+            # Terminate Instance
             print(
                 'Terminating instance: {instance}'.format(instance=instance)
             )
@@ -73,7 +79,7 @@ def terminate_instances(instances):
 
 
 # This function determines if a given instance should be terminated at runtime
-def should_terminate(instance):
+def should_terminate(instance, protected_resources):
 
     # Determine when the instance was created
     launch_time = instance['Instances'][0]['LaunchTime']
@@ -99,20 +105,18 @@ def should_terminate(instance):
 
         for tag in tags:
 
-            # If an instance has a 'keepalive' tag, don't terminate it
-            if 'keepalive' in tag.get('Key'):
-                return False
-
-            if 'aws:elastic' in tag.get('Key'):
-                return False
-
-            if 'Lab' in tag.get('Key'):
+            # If an instance is a protected_resource tag, don't terminate it
+            if tag.get('Key').startswith('aws:'):
+                aws_resource = tag.get('Key').split(':')[1].lower()
+                if aws_resource in str(protected_resources):
+                    return False
+            elif tag.get('Key') in str(protected_resources) or \
+                    tag.get('Key') is 'keepalive':
                 return False
 
     # If the instance has been running for longer than permitted based on it's
     # tags hours, terminate it
     if now-launch_time > datetime.timedelta(hours=ttl):
-
         return True
     return False
 
