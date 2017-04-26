@@ -9,7 +9,7 @@ credentials = session.get_credentials()
 access_key = credentials.access_key
 secret_key = credentials.secret_key
 token = credentials.token
-print(credentials.token)
+print(credentials.token)4
 
 with open('/Users/jiravani/Desktop/instances.json') as data_file:
     instances = json.load(data_file)['Reservations']
@@ -30,12 +30,14 @@ def instance_terminate_test(ttl, protected_resources):
                 )
             )
 
-instance_terminate_test(5, ['keepalive', 'aws:elasticmap']) #['', 'aws:elasticmap', 'Lab'])
+instance_terminate_test(5, ['keepalive', 'aws:elasticmap'])
+
 
 def test_1(capfd):
     instance_terminate_test(3, ['keepalive', 'Lab'])
     out, err = capfd.readouterr()
     assert out == 'i-06b17a7e7abe86a6e(EMR)\ni-06b17a7e7abe86a6e(EC2)\n'
+
 
 def test_2(capfd):
     instance_terminate_test(5, ['keepalive', 'aws:elasticmap'])

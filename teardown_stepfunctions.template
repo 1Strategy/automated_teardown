@@ -1,0 +1,31 @@
+{
+   "Comment": "1Strategy Teardown Statemachine",
+   "StartAt": "Compute",
+   "States": {
+         "ManagedService": {
+                  "Type": "Parallel",
+                  "Next": "Network",
+                  "Branches": [ManagedService]
+         },
+        "Compute": {
+                 "Type": "Parallel",
+                 "Next": "Database",
+                 "Branches": [Compute]
+        },
+        "Database": {
+                 "Type": "Parallel",
+                 "Next": "ManagedService",
+                 "Branches": [Database]
+        },
+        "Network": {
+                 "Type": "Parallel",
+                 "Next": "ManagedService",
+                 "Branches": [Network]
+        }
+    }
+}
+
+Compute = {}
+Database = {}
+ManagedService = {}
+Network = {}

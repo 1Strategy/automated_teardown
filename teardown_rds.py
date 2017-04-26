@@ -1,18 +1,26 @@
 import boto3
-import datetime
+from datetime import datetime
+from datetime import timedelta
 
 
 def lambda_handler(event, context):
 
-    rds_client = boto3.client('rds', region_name = event['region'])
+    rds_client = boto3.client('rds', region_name=event['region'])
 
     for instance in rds_client.describe_db_instances()['DBInstances']:
 
-        if datetime.datetime.now(instance['InstanceCreateTime'].tzinfo)-instance['InstanceCreateTime'] > datetime.timedelta(hours=2):
+        create_time = instance['InstanceCreateTime'].tzinfo
+        now = datetime.now(create_time)
+        db_instance = instance['DBInstanceIdentifier']
+
+        if now-create_time > timedelta(hours=2):
             try:
-                print("Terminating RDS instance {instance}: ".format(instance=instance['DBInstanceIdentifier']))
-                rds_client.delete_db_instance(DBInstanceIdentifier=instance['DBInstanceIdentifier'],
+                print("Terminating RDS instance: {}".format(db_instance))
+
+                rds_client.delete_db_instance(DBInstanceIdentifier=db_instance,
                                               SkipFinalSnapshot=True)
-                print("{instance} successfully destroyed".format(instance=instance['DBInstanceIdentifier']))
+
+                print("{} successfully destroyed".format(db_instance))
             except Exception as e:
-                print("Unable to delete database intance {db}: {error}".format(db=instance['DBInstanceIdentifier'], error=e))
+                print("Unable to delete database intance {db}: {error}".format(db=db_instance,
+                                                                               error=e))

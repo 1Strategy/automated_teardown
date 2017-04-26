@@ -1,25 +1,20 @@
 import boto3
 import datetime
 
-# Dry run flag for testing purposes
-dry_run = True
+
 ec2_client = []
 
 
 def lambda_handler(event, context):
 
-    # Get DryRun flag from event context
-    global dry_run
-    dry_run = event['dry_run']
+    # Get DryRun flag from event
+    dry_run = event.get('dry_run', True)
 
     # Initialize/reinitialize global ec2_client
     global ec2_client
     ec2_client = boto3.client('ec2', region_name=event['region'])
 
-    if 'protected_resources' in event:
-        protected_resources = event['protected_resources']
-    else:
-        protected_resources = []
+    protected_resources = event.get('protected_resources', [])
 
     # Retreives a list of all of the ec2 instances in the given 'region'
     instances = ec2_client.describe_instances()['Reservations']
@@ -63,7 +58,7 @@ def terminate_instances(instances):
                                                  })
         except Exception as e:
             print (
-                'Termination protection not active: {error}'''.format(error=e)
+                'Termination protection not active: {error}'.format(error=e)
             )
 
         try:
