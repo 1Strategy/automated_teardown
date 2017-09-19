@@ -1,0 +1,209 @@
+{
+    "Comment": "Destroy student resources created in a boot camp.",
+    "StartAt": "WhichBootCamp",
+    "States": {
+        "WhichBootCamp": {
+            "Type" : "Choice",
+            "Choices": [
+                {
+                    "Variable": "$.class",
+                    "StringEquals": "serverless",
+                    "Next": "Serverless"
+                },
+                {
+                    "Variable": "$.class",
+                    "StringEquals": "batch",
+                    "Next": "BigDataBatch"
+                },
+                {
+                    "Variable": "$.class",
+                    "StringEquals": "streaming",
+                    "Next": "BigDataStream"
+                }
+            ],
+            "Default": "DefaultState"
+        },
+        
+        "Serverless": {
+            "Type": "Parallel",
+            "Next": "Report",
+            "Branches": [
+                {
+                    "StartAt": "SVL-Lambdas",
+                    "States": {
+                        "SVL-Lambdas": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:lambda:us-east-1:281782457076:function:teardown_lambda_functions:production",
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "SVL-SQS",
+                    "States": {
+                        "SVL-SQS": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:lambda:us-east-1:281782457076:function:teardown_sqs_queues:production",
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "SVL-StepFunctions",
+                    "States": {
+                        "SVL-StepFunctions": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:lambda:us-east-1:281782457076:function:teardown_step_functions:production",
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "SVL-Activities",
+                    "States": {
+                        "SVL-Activities": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:lambda:us-east-1:281782457076:function:teardown_activities:production",
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "SVL-DynamoDBTables",
+                    "States": {
+                        "SVL-DynamoDBTables": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:lambda:us-east-1:281782457076:function:teardown_dynamodb:production",
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "SVL-Users",
+                    "States": {
+                        "SVL-Users": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:lambda:us-east-1:281782457076:function:teardown_users:production",
+                            "End": true
+                        }
+                    }
+                }
+            ]
+        },
+        
+        "BigDataBatch": {
+            "Type" : "Parallel",
+            "Next": "Report",
+            "Branches": [
+                {
+                    "StartAt": "BDB-S3",
+                    "States": {
+                        "BDB-S3": {
+                            "Type": "Wait",
+                            "Seconds": 15,
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "BDB-Redshift",
+                    "States": {
+                        "BDB-Redshift": {
+                            "Type": "Wait",
+                            "Seconds": 15,
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "BDB-EMR",
+                    "States": {
+                        "BDB-EMR": {
+                            "Type": "Wait",
+                            "Seconds": 15,
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "BDB-Glue",
+                    "States": {
+                        "BDB-Glue": {
+                            "Type": "Wait",
+                            "Seconds": 15,
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "BDB-EC2",
+                    "States": {
+                        "BDB-EC2": {
+                            "Type": "Wait",
+                            "Seconds": 15,
+                            "End": true
+                        }
+                    }
+                }
+            ]
+        },
+
+        "BigDataStream": {
+            "Type" : "Parallel",
+            "Next": "Report",
+                "Branches": [
+                    {
+                    "StartAt": "BDS-S3",
+                    "States": {
+                        "BDS-S3": {
+                            "Type": "Wait",
+                            "Seconds": 15,
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "BDS-Kinesis",
+                    "States": {
+                        "BDS-Kinesis": {
+                            "Type": "Wait",
+                            "Seconds": 15,
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "BDS-Elasticsearch",
+                    "States": {
+                        "BDS-Elasticsearch": {
+                            "Type": "Wait",
+                            "Seconds": 15,
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "BDS-EC2",
+                    "States": {
+                        "BDS-EC2": {
+                            "Type": "Wait",
+                            "Seconds": 15,
+                            "End": true
+                        }
+                    }
+                }
+            ]
+        },
+
+        "DefaultState": {
+            "Type": "Fail",
+            "Error": "DefaultStateError",
+            "Cause": "Could not determine the Boot Camp Type!"
+        },
+        
+        "Report": {
+            "Type": "Pass",
+            "End": true
+        }
+    }
+}
